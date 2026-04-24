@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tauri build",
+    "build": "vite build",
     "preview": "vite preview",
     "tauri": "tauri dev",
+    "release": "tauri build",
     "prepare": "husky",
     "lint": "eslint src --ext ts,tsx",
     "lint:fix": "eslint src --ext ts,tsx --fix",
