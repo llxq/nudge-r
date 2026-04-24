@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <!-- Background -->
+  <rect width="48" height="48" rx="13" fill="url(#grad)"/>
+
+  <!-- Chair legs -->
+  <line x1="14" y1="34" x2="12" y2="42" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+  <line x1="34" y1="34" x2="36" y2="42" stroke="white" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- Chair seat -->
+  <rect x="11" y="30" width="26" height="4" rx="2" fill="white" opacity="0.85"/>
+
+  <!-- Chair back -->
+  <rect x="30" y="18" width="4" height="14" rx="2" fill="white" opacity="0.75"/>
+
+  <!-- Person body standing up -->
+  <!-- Head -->
+  <circle cx="20" cy="13" r="4.5" fill="white"/>
+
+  <!-- Torso -->
+  <path d="M16 18 C16 17 18 16 20 16 C22 16 24 17 24 18 L25 27 L15 27 Z" fill="white" opacity="0.9"/>
+
+  <!-- Raised arm (nudge gesture) -->
+  <path d="M24 20 L31 15" stroke="white" stroke-width="2.5" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- Motion lines (rising) -->
+  <line x1="8" y1="22" x2="11" y2="18" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+  <line x1="6" y1="27" x2="9" y2="23" stroke="white" stroke-width="1.5" stroke-linecap="round" opacity="0.28"/>
+
+  <defs>
+    <linearGradient id="grad" x1="0" y1="0" x2="48" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4f8cff"/>
+      <stop offset="100%" stop-color="#1a4fd6"/>
+    </linearGradient>
+  </defs>
+</svg>

@@ -1,0 +1,47 @@
+.panel {
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  max-width: 560px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+  margin: 0;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  height: 240px;
+  border: 1px dashed var(--color-border);
+  border-radius: 12px;
+}
+
+.icon {
+  font-size: 36px;
+  color: var(--color-text-quaternary);
+}
+
+.placeholderText {
+  font-size: 13px;
+  color: var(--color-text-quaternary);
+}

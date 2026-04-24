@@ -1,0 +1,95 @@
+.panel {
+  padding: 40px 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 560px;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.title {
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.4px;
+  margin: 0;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sectionLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.7px;
+  color: var(--color-text-secondary);
+  padding: 0 2px;
+}
+
+.card {
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--color-border);
+  gap: 16px;
+}
+
+.rowNoBorder {
+  border-bottom: none;
+}
+
+.rowLabel {
+  font-size: 13px;
+  color: var(--color-text-primary);
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.sliderRow {
+  padding: 12px 22px 16px;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.actionBtn {
+  border-radius: 20px !important;
+  padding-inline: 24px !important;
+  font-weight: 500 !important;
+}
+
+.statusText {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+.breakText {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+}

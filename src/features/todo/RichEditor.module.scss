@@ -1,0 +1,162 @@
+.wrap {
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+  background: var(--color-surface);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.wrap:focus-within {
+  border-color: #1e6fff;
+  box-shadow: 0 0 0 2px rgba(30, 111, 255, 0.15);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  padding: 4px 6px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.toolBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 4px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  transition: background 0.1s, color 0.1s;
+  padding: 0;
+  flex-shrink: 0;
+}
+
+.toolBtn:hover {
+  background: var(--color-hover);
+  color: var(--color-text-primary);
+}
+
+.toolActive {
+  background: rgba(30, 111, 255, 0.12) !important;
+  color: #1e6fff !important;
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  background: var(--color-border);
+  margin: 0 3px;
+  flex-shrink: 0;
+}
+
+.editor {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* Tiptap ProseMirror styles */
+.editor :global(.ProseMirror) {
+  padding: 10px 12px;
+  min-height: 100px;
+  font-size: 13px;
+  line-height: 1.7;
+  outline: none;
+  color: var(--color-text-primary);
+}
+
+.editor :global(.ProseMirror p.is-editor-empty:first-child::before) {
+  content: attr(data-placeholder);
+  color: var(--color-text-quaternary);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+.editor :global(.ProseMirror h1),
+.editor :global(.ProseMirror h2),
+.editor :global(.ProseMirror h3) {
+  font-weight: 600;
+  line-height: 1.4;
+  margin: 8px 0 4px;
+}
+
+.editor :global(.ProseMirror h1) { font-size: 18px; }
+.editor :global(.ProseMirror h2) { font-size: 15px; }
+.editor :global(.ProseMirror h3) { font-size: 13px; }
+
+.editor :global(.ProseMirror p) {
+  margin: 2px 0;
+}
+
+.editor :global(.ProseMirror ul),
+.editor :global(.ProseMirror ol) {
+  padding-left: 22px;
+  margin: 4px 0;
+}
+
+.editor :global(.ProseMirror li) {
+  margin: 2px 0;
+}
+
+.editor :global(.ProseMirror strong) {
+  font-weight: 600;
+}
+
+.editor :global(.ProseMirror em) {
+  font-style: italic;
+}
+
+.editor :global(.ProseMirror s) {
+  text-decoration: line-through;
+  opacity: 0.5;
+}
+
+.editor :global(.ProseMirror code) {
+  background: var(--color-hover);
+  border-radius: 3px;
+  padding: 1px 5px;
+  font-family: 'SF Mono', Menlo, monospace;
+  font-size: 12px;
+  color: #e96900;
+}
+
+.editor :global(.ProseMirror pre) {
+  background: var(--color-hover);
+  border-radius: 6px;
+  padding: 10px 14px;
+  overflow-x: auto;
+  margin: 6px 0;
+}
+
+.editor :global(.ProseMirror pre code) {
+  background: none;
+  padding: 0;
+  color: var(--color-text-primary);
+  font-size: 12px;
+}
+
+.editor :global(.ProseMirror blockquote) {
+  border-left: 3px solid #1e6fff;
+  margin: 6px 0;
+  padding: 2px 12px;
+  color: var(--color-text-secondary);
+}
+
+.editor :global(.ProseMirror hr) {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 8px 0;
+}

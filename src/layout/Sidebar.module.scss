@@ -1,0 +1,87 @@
+/* 淡色侧边栏 — 浅蓝灰 */
+.sidebar {
+  width: 56px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 0 10px;
+  user-select: none;
+  background: #e8edf5;
+  border-right: 1px solid #d4dbe8;
+}
+
+[data-theme="dark"] .sidebar,
+.sidebar[data-dark] {
+  background: #1e2533;
+  border-right-color: #2a3040;
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 14px 0 12px;
+  margin-bottom: 4px;
+  width: 100%;
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+
+.logoImg {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+}
+
+.brandName {
+  font-size: 9px;
+  font-weight: 700;
+  color: rgba(0,0,0,0.3);
+  letter-spacing: 0.4px;
+}
+
+.nav {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 0;
+  width: 100%;
+}
+
+.bottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding-top: 6px;
+  border-top: 1px solid rgba(0,0,0,0.07);
+}
+
+.navBtn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: rgba(30, 60, 110, 0.4);
+  transition: background 0.15s, color 0.15s;
+  outline: none;
+}
+
+.navBtn:hover {
+  background: rgba(30, 111, 255, 0.1);
+  color: #1e6fff;
+}
+
+.navBtnActive {
+  background: rgba(30, 111, 255, 0.14) !important;
+  color: #1e6fff !important;
+}
