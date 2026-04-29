@@ -18,7 +18,12 @@ export default function NotificationPage() {
   );
 
   const [config, setConfig] = useState<IMovementNotificationConfig | null>(null);
-  const [remaining, setRemaining] = useState(0);
+  const [endAt, setEndAt] = useState<number | null>(null);
+  const [now, setNow] = useState<number>(Date.now());
+
+  const dismiss = async () => {
+    await closeNoticeWindows();
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -28,7 +33,9 @@ export default function NotificationPage() {
         return;
       }
       setConfig(nextConfig);
-      setRemaining(nextConfig.activityMin * 60);
+      const nextNow = Date.now();
+      setNow(nextNow);
+      setEndAt(nextNow + nextConfig.activityMin * 60 * 1000);
     });
 
     return () => {
@@ -37,27 +44,50 @@ export default function NotificationPage() {
   }, []);
 
   useEffect(() => {
-    if (!config || remaining <= 0) {
+    if (!config || endAt == null) {
       return;
     }
-    const timer = setInterval(() => setRemaining((s) => s - 1), 1000);
-    return () => clearInterval(timer);
-  }, [config, remaining]);
+
+    const syncNow = (): void => {
+      const current = Date.now();
+      setNow(current);
+
+      if (current >= endAt) {
+        void dismiss();
+      }
+    };
+
+    syncNow();
+    const timer = window.setInterval(syncNow, 1000);
+    window.addEventListener('focus', syncNow);
+    document.addEventListener('visibilitychange', syncNow);
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', syncNow);
+      document.removeEventListener('visibilitychange', syncNow);
+    };
+  }, [config, endAt]);
 
   useEffect(() => {
-    if (!config || remaining !== 0) {
+    if (!config || endAt == null) {
       return;
     }
 
-    void closeNoticeWindows();
-  }, [config, remaining]);
+    const delay = Math.max(0, endAt - Date.now());
+    const timer = window.setTimeout(() => {
+      void dismiss();
+    }, delay);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [config, endAt]);
+
+  const remaining = endAt == null ? 0 : Math.max(0, Math.ceil((endAt - now) / 1000));
 
   const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
   const ss = String(remaining % 60).padStart(2, '0');
-
-  const dismiss = async () => {
-    await closeNoticeWindows();
-  };
 
   if (!config) {
     return null;
