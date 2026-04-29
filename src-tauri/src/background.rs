@@ -12,7 +12,6 @@ use crate::{
 use serde::Serialize;
 use sqlx::{FromRow, SqlitePool};
 use std::{
-    process::Command,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tauri::{async_runtime, AppHandle, Emitter, Manager, Runtime};
@@ -24,7 +23,6 @@ const POLL_INTERVAL: Duration = Duration::from_secs(1);
 #[derive(Debug, FromRow)]
 struct MovementConfigSnapshot {
     interval_min: i64,
-    activity_min: i64,
     is_working: i64,
     active: i64,
     start_time: Option<i64>,
@@ -54,7 +52,6 @@ pub fn start_background<R: Runtime>(app: AppHandle<R>) {
 }
 
 async fn run_movement_loop<R: Runtime>(app: AppHandle<R>) {
-    let mut waiting_for_resume = false;
     let mut interval = interval(POLL_INTERVAL);
 
     info_log("活动提醒后台循环已启动");
@@ -70,55 +67,27 @@ async fn run_movement_loop<R: Runtime>(app: AppHandle<R>) {
         };
 
         if config.active == 0 {
-            waiting_for_resume = false;
             interval.tick().await;
             continue;
         }
 
         if config.is_working == 0 {
-            waiting_for_resume = false;
             interval.tick().await;
             continue;
         }
 
-        let idle_limit_ms = config.activity_min * 60 * 1000;
         let interval_ms = config.interval_min * 60 * 1000;
-
-        if let Some(idle_ms) = current_idle_millis() {
-            if idle_ms >= idle_limit_ms {
-                if config.start_time.is_some() {
-                    if let Err(err) = persist_start_time(&app, None).await {
-                        info_log(&format!("清空 start_time 失败: {}", err));
-                    } else {
-                        waiting_for_resume = true;
-                        if let Err(err) = emit_timer_event(&app, "idle-reset", None) {
-                            info_log(&format!("发送倒计时重置事件失败: {}", err));
-                        }
-                        info_log("用户长时间未操作，暂停活动提醒倒计时");
-                    }
-                }
-                interval.tick().await;
-                continue;
-            }
-        }
-
         let now = current_timestamp_millis();
         let start_time = match config.start_time {
             Some(start_time) => {
-                waiting_for_resume = false;
                 start_time
             }
             None => {
                 if let Err(err) = persist_start_time(&app, Some(now)).await {
                     info_log(&format!("初始化 start_time 失败: {}", err));
                 } else {
-                    let reason = if waiting_for_resume { "resume" } else { "start" };
-                    waiting_for_resume = false;
-                    if let Err(err) = emit_timer_event(&app, reason, Some(now)) {
+                    if let Err(err) = emit_timer_event(&app, "start", Some(now)) {
                         info_log(&format!("发送倒计时启动事件失败: {}", err));
-                    }
-                    if reason == "resume" {
-                        info_log("检测到用户恢复操作，重新开始活动提醒倒计时");
                     }
                 }
                 interval.tick().await;
@@ -191,29 +160,6 @@ fn current_timestamp_millis() -> i64 {
         .duration_since(UNIX_EPOCH)
         .expect("system time before unix epoch")
         .as_millis() as i64
-}
-
-#[cfg(target_os = "macos")]
-fn current_idle_millis() -> Option<i64> {
-    // macOS 下通过 IOHIDSystem 的 HIDIdleTime 读取系统空闲时长，单位是纳秒。
-    let output = Command::new("ioreg")
-        .args(["-c", "IOHIDSystem"])
-        .output()
-        .ok()?;
-    let stdout = String::from_utf8(output.stdout).ok()?;
-    let idle_line = stdout.lines().find(|line| line.contains("HIDIdleTime"))?;
-    let nanos = idle_line
-        .chars()
-        .filter(|ch| ch.is_ascii_digit())
-        .collect::<String>()
-        .parse::<u128>()
-        .ok()?;
-    Some((nanos / 1_000_000) as i64)
-}
-
-#[cfg(not(target_os = "macos"))]
-fn current_idle_millis() -> Option<i64> {
-    None
 }
 
 #[cfg(test)]

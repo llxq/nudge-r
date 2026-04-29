@@ -1,7 +1,7 @@
 /**
  * 活动提醒模块：间隔时间最小值（分钟）
  */
-export const MOVEMENT_INTERVAL_MIN = 1;
+export const MOVEMENT_INTERVAL_MIN = 5;
 
 /**
  * 活动提醒模块：间隔时间最大值（分钟）
