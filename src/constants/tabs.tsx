@@ -2,7 +2,7 @@ import type { ComponentType } from 'react';
 import type { Tab } from "../store";
 import MovementPanel from "../features/movement/MovementPanel";
 import TodoPanel from "../features/todo/TodoPanel";
-import RemindersPanel from "../features/reminders/RemindersPanel";
+import SettingsPanel from "../features/settings/SettingsPanel";
 
 /**
  * 单个 Tab 面板的策略配置
@@ -21,7 +21,7 @@ export interface TabConfig {
 export const TAB_CONFIGS: TabConfig[] = [
   { key: "movement", component: MovementPanel },
   { key: "todo",     component: TodoPanel },
-  { key: "reminders", component: RemindersPanel },
+  { key: "settings", component: SettingsPanel },
 ];
 
 /**

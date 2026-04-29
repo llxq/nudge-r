@@ -5,10 +5,15 @@ mod log;
 pub mod background;
 mod tray;
 
-use db::init_db;
 use crate::db::DbState;
 use background::start_background;
+use db::init_db;
 use tauri::Manager;
+#[cfg(target_os = "macos")]
+use tauri::ActivationPolicy;
+
+const MAIN_WINDOW_LABEL: &str = "main";
+const AUTO_START_ARG: &str = "--tray-only";
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -32,6 +37,7 @@ pub fn run() {
       tauri::async_runtime::block_on(async {
         let _ = tray::refresh_tray_menu(&app.handle()).await;
       });
+      apply_startup_visibility(app);
       log::info_log("应用启动成功");
       Ok(())
     })
@@ -42,4 +48,23 @@ pub fn run() {
     .run(tauri::generate_context!())
     .expect("error while running tauri application");
   log::info_log("应用退出");
+}
+
+fn apply_startup_visibility(app: &mut tauri::App) {
+  if !should_start_in_tray() {
+    return;
+  }
+
+  #[cfg(target_os = "macos")]
+  {
+    let _ = app.set_activation_policy(ActivationPolicy::Accessory);
+  }
+
+  if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+    let _ = window.hide();
+  }
+}
+
+fn should_start_in_tray() -> bool {
+  std::env::args().any(|arg| arg == AUTO_START_ARG)
 }

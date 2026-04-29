@@ -1,7 +1,7 @@
 import { invoke } from '@tauri-apps/api/core';
 import type { AppState, MovementState, Todo } from '../store';
 
-type UserSettings = Pick<AppState, 'theme' | 'tab'>;
+type UserSettings = Pick<AppState, 'theme' | 'tab' | 'autoStart'>;
 export interface IMovementNotificationConfig {
   activityMin: number;
   title: string;
@@ -20,18 +20,64 @@ export interface ITrayDetailMovementState {
   startTime: number | null;
 }
 
+export interface ITrayDetailTodoItem {
+  title: string;
+  isRemind: boolean;
+}
+
 export interface ITrayDetailSnapshot {
   movement: ITrayDetailMovementState;
-  todos: string[];
+  todos: ITrayDetailTodoItem[];
+  remindedCount: number;
   overflowCount: number;
 }
+
+type RawUserSettings = Record<string, string>;
+
+const normalizeUserSettings = (settings: RawUserSettings): Partial<UserSettings> => {
+  const nextSettings: Partial<UserSettings> = {};
+
+  if (settings.theme === 'light' || settings.theme === 'dark') {
+    nextSettings.theme = settings.theme;
+  }
+
+  if (
+    settings.tab === 'movement' ||
+    settings.tab === 'todo' ||
+    settings.tab === 'settings'
+  ) {
+    nextSettings.tab = settings.tab;
+  }
+
+  if (settings.autoStart != null) {
+    nextSettings.autoStart = settings.autoStart === '1' || settings.autoStart === 'true';
+  }
+
+  return nextSettings;
+};
+
+const serializeUserSettings = (settings: Partial<UserSettings>): Record<string, string> => {
+  const nextSettings: Record<string, string> = {};
+
+  if (settings.theme != null) {
+    nextSettings.theme = settings.theme;
+  }
+  if (settings.tab != null) {
+    nextSettings.tab = settings.tab;
+  }
+  if (settings.autoStart != null) {
+    nextSettings.autoStart = settings.autoStart ? '1' : '0';
+  }
+
+  return nextSettings;
+};
 
 /**
  * 获取用户设置
  */
 export const getUserSettings = async (): Promise<Partial<UserSettings>> => {
-  const settings = await invoke<Partial<UserSettings>>('get_user_settings');
-  return settings;
+  const settings = await invoke<RawUserSettings>('get_user_settings');
+  return normalizeUserSettings(settings);
 };
 
 /**
@@ -39,7 +85,14 @@ export const getUserSettings = async (): Promise<Partial<UserSettings>> => {
  * @param settings
  */
 export const updateUserSettings = async (settings: Partial<UserSettings>) => {
-  await invoke('update_user_settings', { settings });
+  await invoke('update_user_settings', { settings: serializeUserSettings(settings) });
+};
+
+/**
+ * 设置开机自启
+ */
+export const setAutoStart = async (enabled: boolean): Promise<void> => {
+  await invoke('set_auto_start', { enabled });
 };
 
 /**
@@ -96,7 +149,7 @@ export const createUserTodo = async (todo: Partial<Todo>) => {
  * @param todo
  */
 export const deleteUserTodo = async (todo: Partial<Todo>) => {
-  await invoke('delete_user_todo', { todo });
+  await invoke('delete_user_todo', { id: todo.id });
 };
 
 /**

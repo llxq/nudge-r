@@ -40,12 +40,12 @@ const TRAY_DETAIL_WINDOW_LABEL: &str = "tray_detail";
 /**
  * 托盘详情窗口宽度
  */
-const TRAY_DETAIL_WINDOW_WIDTH: f64 = 360.0;
+const TRAY_DETAIL_WINDOW_WIDTH: f64 = 320.0;
 
 /**
  * 托盘详情窗口高度
  */
-const TRAY_DETAIL_WINDOW_HEIGHT: f64 = 420.0;
+const TRAY_DETAIL_WINDOW_HEIGHT: f64 = 500.0;
 
 /**
  * 托盘详情窗口与图标的垂直间距
@@ -105,6 +105,7 @@ struct TrayMovementSnapshotRow {
 #[derive(Debug, FromRow)]
 struct TrayTodoRow {
   title: String,
+  is_remind: i64,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
@@ -119,9 +120,17 @@ pub struct TrayDetailMovementState {
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
+pub struct TrayDetailTodoItem {
+  title: String,
+  is_remind: bool,
+}
+
+#[derive(Debug, Clone, Serialize, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
 pub struct TrayDetailSnapshot {
   movement: TrayDetailMovementState,
-  todos: Vec<String>,
+  todos: Vec<TrayDetailTodoItem>,
+  reminded_count: usize,
   overflow_count: usize,
 }
 
@@ -516,8 +525,12 @@ fn build_tray_detail_snapshot(
     todos: todos
       .iter()
       .take(TRAY_TODO_PREVIEW_LIMIT)
-      .map(|todo| todo.title.clone())
+      .map(|todo| TrayDetailTodoItem {
+        title: todo.title.clone(),
+        is_remind: todo.is_remind != 0,
+      })
       .collect(),
+    reminded_count: todos.iter().filter(|todo| todo.is_remind != 0).count(),
     overflow_count: todos.len().saturating_sub(TRAY_TODO_PREVIEW_LIMIT),
   }
 }
@@ -627,6 +640,7 @@ mod tests {
     let todos = (1..=7)
       .map(|index| TrayTodoRow {
         title: format!("待办 {index}"),
+        is_remind: if index % 2 == 0 { 1 } else { 0 },
       })
       .collect::<Vec<_>>();
 
@@ -635,6 +649,7 @@ mod tests {
     assert_eq!(snapshot.todos.len(), TRAY_TODO_PREVIEW_LIMIT);
     assert_eq!(snapshot.todos[0], "待办 1");
     assert_eq!(snapshot.todos[4], "待办 5");
+    assert_eq!(snapshot.reminded_count, 3);
     assert_eq!(snapshot.overflow_count, 2);
   }
 
@@ -676,7 +691,7 @@ mod tests {
 
     let position = compute_tray_detail_window_position_with_monitor_bounds(tray_rect, &monitor_bounds);
 
-    assert_eq!(position.x, 1280);
+    assert_eq!(position.x, 1300);
     assert_eq!(position.y, 42);
   }
 

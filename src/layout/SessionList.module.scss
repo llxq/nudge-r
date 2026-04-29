@@ -109,6 +109,13 @@
   gap: 1px;
 }
 
+.nameRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .name {
   font-size: 13px;
   font-weight: 500;
@@ -116,6 +123,21 @@
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--color-text-primary);
+}
+
+.countBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  line-height: 18px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  font-size: 11px;
+  flex-shrink: 0;
 }
 
 .sub {

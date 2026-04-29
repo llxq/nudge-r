@@ -6,7 +6,7 @@ import type { AppState } from "../store";
 export const SESSION_ICON_COLORS = {
   movement: "#07c160",
   todo: "#1e6fff",
-  reminders: "#fa541c",
+  settings: "#7a7f87",
 } as const;
 
 /**
@@ -23,5 +23,16 @@ export function movementSubText(s: AppState): string {
  */
 export function todoSubText(s: AppState): string {
   const left = s.todos.filter((t) => !t.done).length;
-  return left > 0 ? `${left} 项待完成` : "全部完成 ✓";
+  const reminded = s.todos.filter((t) => !t.done && t.isRemind).length;
+  if (left === 0) {
+    return "全部完成 ✓";
+  }
+  return reminded > 0 ? `${left} 项待完成 · 已提醒 ${reminded}` : `${left} 项待完成`;
+}
+
+/**
+ * 设置模块在会话列表中的副标题文案
+ */
+export function settingsSubText(s: AppState): string {
+  return s.autoStart ? "已开启开机自启" : "应用与启动设置";
 }

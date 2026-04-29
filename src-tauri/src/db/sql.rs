@@ -25,7 +25,7 @@ pub mod user_todo {
   pub const DELETE: &str = "UPDATE user_todos SET is_deleted = 1 WHERE id = ?";
   // 更新一个待办
   pub const UPDATE: &str =
-    "UPDATE user_todos SET title = ?, body = ?, remind_at = ? WHERE id = ?";
+    "UPDATE user_todos SET title = ?, body = ?, remind_at = ?, is_remind = ? WHERE id = ?";
 
   pub const SELECT_BY_ID: &str = "SELECT * FROM user_todos WHERE id = ?";
 

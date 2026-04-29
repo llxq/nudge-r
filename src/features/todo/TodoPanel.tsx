@@ -23,7 +23,7 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { EActionType } from '../../constants/enum';
-import { createUserTodo, updateUserTodo } from '../../core/invoke.ts';
+import { createUserTodo, deleteUserTodo, updateUserTodo } from '../../core/invoke.ts';
 import { useStore } from '../../store';
 import { $success } from '../../utils/message.ts';
 import RichEditor from './RichEditor';
@@ -109,6 +109,7 @@ export default function TodoPanel() {
 
   const pendingList = todos.filter((t) => !t.done);
   const doneList = todos.filter((t) => t.done);
+  const remindedPendingCount = pendingList.filter((t) => t.isRemind).length;
 
   const doneCount = doneList.length;
   const totalCount = todos.length;
@@ -124,7 +125,7 @@ export default function TodoPanel() {
       />
       <div className={styles.itemBody}>
         <span
-          className={styles.text}
+          className={`${styles.text} ${t.isRemind && !t.done ? styles.textReminded : ''}`}
           style={{
             textDecoration: t.done ? 'line-through' : 'none',
             opacity: t.done ? 0.4 : 1,
@@ -133,10 +134,15 @@ export default function TodoPanel() {
           {t.title}
         </span>
         {t.remindAt && (
-          <span className={styles.remindTime}>
-            <ClockCircleOutlined style={{ marginRight: 3 }} />
-            {dayjs(t.remindAt).format('MM-DD HH:mm')}
-          </span>
+          <div className={styles.metaRow}>
+            <span className={styles.remindTime}>
+              <ClockCircleOutlined style={{ marginRight: 3 }} />
+              {dayjs(t.remindAt).format('MM-DD HH:mm')}
+            </span>
+            {t.isRemind && !t.done && (
+              <span className={styles.remindedBadge}>已提醒</span>
+            )}
+          </div>
         )}
         {t.body && t.body !== '<p></p>' && (
           <div
@@ -161,9 +167,10 @@ export default function TodoPanel() {
           okText="删除"
           cancelText="取消"
           okButtonProps={{ danger: true, size: 'small' }}
-          onConfirm={() =>
-            dispatch({ type: EActionType.TODO_DELETE, payload: t.id })
-          }
+          onConfirm={async () => {
+            await deleteUserTodo({ id: t.id });
+            dispatch({ type: EActionType.TODO_DELETE, payload: t.id });
+          }}
         >
           <Tooltip title="删除">
             <Button type="text" size="small" danger icon={<DeleteOutlined />} />
@@ -260,6 +267,14 @@ export default function TodoPanel() {
                         {pendingList.length}
                       </Tag>
                     )}
+                    {remindedPendingCount > 0 && (
+                      <Tag
+                        style={{ marginLeft: 6, fontSize: 11 }}
+                        color="error"
+                      >
+                        已提醒 {remindedPendingCount}
+                      </Tag>
+                    )}
                   </span>
                 ),
                 children:
@@ -310,6 +325,7 @@ export default function TodoPanel() {
         width={560}
         destroyOnHidden
         centered
+        maskClosable={false}
         styles={{
           body: {
             padding: '12px 0 0',

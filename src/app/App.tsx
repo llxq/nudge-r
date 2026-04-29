@@ -25,6 +25,10 @@ type MovementTimerResetPayload = {
   startTime: number | null;
 };
 
+type TodoRemindedPayload = {
+  id: number;
+};
+
 function Shell() {
   const { state } = useStore();
   const { token } = antTheme.useToken();
@@ -94,7 +98,8 @@ function ThemeWrapper() {
 
   useEffect(() => {
     let disposed = false;
-    let unlisten: (() => void) | undefined;
+    let unlistenMovement: (() => void) | undefined;
+    let unlistenTodoReminded: (() => void) | undefined;
 
     listen<MovementTimerResetPayload>('movement-timer-reset', (event) => {
       if (disposed) {
@@ -111,15 +116,46 @@ function ThemeWrapper() {
           fn();
           return;
         }
-        unlisten = fn;
+        unlistenMovement = fn;
       })
       .catch((error) => {
         console.error('failed to listen movement-timer-reset', error);
       });
 
+    listen<TodoRemindedPayload>('todo-reminded', (event) => {
+      if (disposed) {
+        return;
+      }
+
+      void getUserTodos()
+        .then((todos) => {
+          if (disposed) {
+            return;
+          }
+          dispatch({
+            type: EActionType.INITIALIZE_STORE,
+            payload: { todos },
+          });
+        })
+        .catch((error) => {
+          console.error(`failed to refresh todos after reminder ${event.payload.id}`, error);
+        });
+    })
+      .then((fn) => {
+        if (disposed) {
+          fn();
+          return;
+        }
+        unlistenTodoReminded = fn;
+      })
+      .catch((error) => {
+        console.error('failed to listen todo-reminded', error);
+      });
+
     return () => {
       disposed = true;
-      unlisten?.();
+      unlistenMovement?.();
+      unlistenTodoReminded?.();
     };
   }, [dispatch]);
 

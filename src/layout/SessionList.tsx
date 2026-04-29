@@ -1,7 +1,7 @@
 import {
   ThunderboltOutlined,
   UnorderedListOutlined,
-  BellOutlined,
+  SettingOutlined,
   SunOutlined,
   MoonOutlined,
 } from "@ant-design/icons";
@@ -9,7 +9,12 @@ import { Tooltip } from "antd";
 import { useStore } from "../store";
 import type { Tab, AppState } from "../store";
 import { EActionType } from "../constants/enum";
-import { SESSION_ICON_COLORS, movementSubText, todoSubText } from "../constants/session";
+import {
+  SESSION_ICON_COLORS,
+  movementSubText,
+  settingsSubText,
+  todoSubText,
+} from "../constants/session";
 import { APP_NAME } from "../constants/app";
 import logo from "../../public/logo.svg";
 import styles from "./SessionList.module.scss";
@@ -37,17 +42,18 @@ const SESSIONS: {
     sub: todoSubText,
   },
   {
-    key: "reminders",
-    label: "更多提醒",
-    icon: <BellOutlined />,
-    iconBg: SESSION_ICON_COLORS.reminders,
-    sub: () => "即将推出",
+    key: "settings",
+    label: "设置",
+    icon: <SettingOutlined />,
+    iconBg: SESSION_ICON_COLORS.settings,
+    sub: settingsSubText,
   },
 ];
 
 export default function SessionList() {
   const { state, dispatch } = useStore();
   const isDark = state.theme === "dark";
+  const remindedTodoCount = state.todos.filter((todo) => !todo.done && todo.isRemind).length;
 
   return (
     <div className={styles.col}>
@@ -83,7 +89,12 @@ export default function SessionList() {
                 {item.icon}
               </div>
               <div className={styles.info}>
-                <span className={styles.name}>{item.label}</span>
+                <div className={styles.nameRow}>
+                  <span className={styles.name}>{item.label}</span>
+                  {item.key === "todo" && remindedTodoCount > 0 && (
+                    <span className={styles.countBadge}>{remindedTodoCount}</span>
+                  )}
+                </div>
                 <span className={styles.sub}>{item.sub(state)}</span>
               </div>
             </li>

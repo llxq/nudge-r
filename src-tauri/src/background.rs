@@ -37,6 +37,12 @@ struct MovementTimerEvent {
     start_time: Option<i64>,
 }
 
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TodoRemindedEvent {
+    id: i64,
+}
+
 pub fn start_background<R: Runtime>(app: AppHandle<R>) {
     let movement_app = app.clone();
     async_runtime::spawn(async move {
@@ -308,6 +314,8 @@ async fn run_check_todo_remind<R: Runtime>(app: AppHandle<R>) {
                         continue;
                     }
 
+                    let _ = app.emit("todo-reminded", TodoRemindedEvent { id: row.id });
+                    let _ = crate::tray::refresh_tray_menu(&app).await;
                     debug_log(row.title.as_str());
                 }
             }

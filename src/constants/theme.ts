@@ -40,6 +40,8 @@ export const CSS_VARS_BY_THEME: Record<ThemeMode, Record<string, string>> = {
     "--color-session-active": "rgba(30,111,255,0.08)",
     "--color-todo-title": "#333333",
     "--color-todo-body": "#666666",
+    "--color-danger": "#d9363e",
+    "--color-danger-bg": "rgba(255, 77, 79, 0.14)",
   },
   dark: {
     "--color-border": "#2a2f38",
@@ -55,5 +57,7 @@ export const CSS_VARS_BY_THEME: Record<ThemeMode, Record<string, string>> = {
     "--color-session-active": "rgba(30,111,255,0.15)",
     "--color-todo-title": "#dce3ed",
     "--color-todo-body": "#8a96a8",
+    "--color-danger": "#d9363e",
+    "--color-danger-bg": "rgba(255, 77, 79, 0.14)",
   },
 };

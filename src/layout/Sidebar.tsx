@@ -2,7 +2,6 @@ import type { ReactNode } from 'react';
 import {
   ThunderboltOutlined,
   UnorderedListOutlined,
-  BellOutlined,
   SunOutlined,
   MoonOutlined,
 } from "@ant-design/icons";
@@ -16,7 +15,6 @@ import logo from "../../public/logo.svg";
 const NAV_ITEMS: { key: Tab; icon: ReactNode; label: string }[] = [
   { key: "movement", icon: <ThunderboltOutlined />, label: "活动提醒" },
   { key: "todo", icon: <UnorderedListOutlined />, label: "待办" },
-  { key: "reminders", icon: <BellOutlined />, label: "更多提醒" },
 ];
 
 export default function Sidebar() {

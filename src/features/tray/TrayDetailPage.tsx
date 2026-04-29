@@ -95,6 +95,7 @@ export default function TrayDetailPage() {
   const countdownText =
     remainingSeconds == null ? snapshot?.movement.statusText ?? '--:--' : formatSecondsAsClock(remainingSeconds);
   const todoCount = snapshot ? snapshot.todos.length + snapshot.overflowCount : 0;
+  const remindedCount = snapshot?.remindedCount ?? 0;
 
   const handleOpenMain = async (): Promise<void> => {
     await showMainWindowFromTray();
@@ -139,10 +140,13 @@ export default function TrayDetailPage() {
           </div>
         </section>
 
-        <section className={styles.section}>
+        <section className={`${styles.section} ${styles.todoSection}`}>
           <div className={styles.sectionRow}>
             <span className={styles.sectionLabel}>未完成待办</span>
-            <span className={styles.meta}>{todoCount} 条</span>
+            <div className={styles.todoMeta}>
+              {remindedCount > 0 && <span className={styles.remindedCount}>已提醒 {remindedCount}</span>}
+              <span className={styles.meta}>{todoCount} 条</span>
+            </div>
           </div>
 
           {!snapshot ? (
@@ -157,7 +161,7 @@ export default function TrayDetailPage() {
             <div className={styles.todoList}>
               {snapshot.todos.map((todo) => (
                 <div
-                  key={todo}
+                  key={todo.title}
                   className={styles.todoItem}
                   style={{
                     background: TRAY_DETAIL_THEME.tipBg,
@@ -166,7 +170,9 @@ export default function TrayDetailPage() {
                   }}
                 >
                   <span className={styles.todoDot} />
-                  <span className={styles.todoText}>{todo}</span>
+                  <span className={`${styles.todoText} ${todo.isRemind ? styles.todoTextReminded : ''}`}>
+                    {todo.title}
+                  </span>
                 </div>
               ))}
             </div>

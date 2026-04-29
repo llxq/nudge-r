@@ -16,6 +16,7 @@ macro_rules! register_commands {
           crate::commands::sql::get_movement_config,
           crate::commands::sql::get_movement_notification_config,
           crate::commands::sql::update_user_settings,
+          crate::commands::sql::set_auto_start,
           crate::commands::sql::update_movement_config,
           crate::commands::sql::get_user_todos,
           crate::commands::sql::create_user_todo,

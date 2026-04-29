@@ -7,6 +7,10 @@ import {
 } from '../../core/invoke';
 import styles from './NotificationPage.module.scss';
 
+const normalizeMultilineText = (value: string): string[] => {
+  return value.replace(/\\n/g, '\n').replace(/\/n/g, '\n').split('\n');
+};
+
 export default function NotificationPage() {
   const theme = useMemo(
     () => MOVEMENT_THEMES[Math.floor(Math.random() * MOVEMENT_THEMES.length)],
@@ -51,6 +55,8 @@ export default function NotificationPage() {
     return null;
   }
 
+  const subLines = normalizeMultilineText(config.sub);
+
   return (
     <div
       className={styles.page}
@@ -75,8 +81,11 @@ export default function NotificationPage() {
         </div>
         <h1 className={styles.movementTitle}>{config.title}</h1>
         <p className={styles.movementSub} style={{ color: theme.subColor }}>
-          {config.sub.split('\n').map((line, i) => (
-            <span key={i}>{line}{i === 0 && <br />}</span>
+          {subLines.map((line, index) => (
+            <span key={`${line}-${index}`}>
+              {line}
+              {index < subLines.length - 1 && <br />}
+            </span>
           ))}
         </p>
         <div className={styles.activityCountdown}>

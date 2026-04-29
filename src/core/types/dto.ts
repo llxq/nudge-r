@@ -30,6 +30,7 @@ export interface IUserTodo {
   body?: string | null;
   done: 0 | 1;
   remind_at?: number | null;
+  is_remind: 0 | 1;
   created_at: number;
   is_deleted: 0 | 1;
 }

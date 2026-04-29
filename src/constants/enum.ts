@@ -8,6 +8,10 @@ export enum EActionType {
    */
   SET_TAB = 'SET_TAB',
   /**
+   * 设置开机自启
+   */
+  SET_AUTO_START = 'SET_AUTO_START',
+  /**
    * 设置活动提醒间隔时长（分钟）
    */
   MOVEMENT_SET_INTERVAL = 'MOVEMENT_SET_INTERVAL',
@@ -47,6 +51,10 @@ export enum EActionType {
    * 切换待办完成状态
    */
   TODO_TOGGLE = 'TODO_TOGGLE',
+  /**
+   * 标记待办已提醒
+   */
+  TODO_MARK_REMINDED = 'TODO_MARK_REMINDED',
   /**
    * 编辑待办内容
    */

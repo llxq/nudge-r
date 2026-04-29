@@ -6,14 +6,19 @@ use crate::{
     error::Result,
     tray,
 };
-use heck::AsLowerCamelCase;
+use heck::{AsLowerCamelCase, ToSnakeCase};
 use serde::{Deserialize, Serialize};
 use sqlx::{FromRow, QueryBuilder, Row, Sqlite};
 use std::{
     collections::HashMap,
+    fs,
+    path::PathBuf,
     time::{SystemTime, UNIX_EPOCH},
 };
 use tauri::{AppHandle, Manager, Runtime};
+
+const APP_IDENTIFIER: &str = "com.chendf.nudge-r";
+const AUTO_START_ARG: &str = "--tray-only";
 
 // 查询 sys_user_setting 表中所有配置
 #[tauri::command]
@@ -39,7 +44,10 @@ pub async fn update_user_settings<R: Runtime>(
     settings: HashMap<String, String>,
 ) -> Result<()> {
     let state = app.state::<DbState>();
-    let setting_vec: Vec<(String, String)> = settings.into_iter().collect();
+    let setting_vec: Vec<(String, String)> = settings
+        .into_iter()
+        .map(|(key, value)| (key.to_snake_case(), value))
+        .collect();
     if setting_vec.is_empty() {
         return Ok(());
     }
@@ -53,6 +61,73 @@ pub async fn update_user_settings<R: Runtime>(
     query_builder.build().execute(&mut *tx).await?;
     tx.commit().await?;
     Ok(())
+}
+
+#[tauri::command]
+pub async fn set_auto_start<R: Runtime>(app: AppHandle<R>, enabled: bool) -> Result<()> {
+    sync_auto_start(&app, enabled)?;
+    update_user_settings(
+        app,
+        HashMap::from([(String::from("autoStart"), if enabled { String::from("1") } else { String::from("0") })]),
+    )
+    .await
+}
+
+#[cfg(target_os = "macos")]
+fn sync_auto_start<R: Runtime>(app: &AppHandle<R>, enabled: bool) -> Result<()> {
+    let launch_agent_path = get_launch_agent_path(app)?;
+
+    if enabled {
+        if let Some(parent) = launch_agent_path.parent() {
+            fs::create_dir_all(parent)?;
+        }
+        fs::write(&launch_agent_path, build_launch_agent_plist()?)?;
+    } else if launch_agent_path.exists() {
+        fs::remove_file(launch_agent_path)?;
+    }
+
+    Ok(())
+}
+
+#[cfg(not(target_os = "macos"))]
+fn sync_auto_start<R: Runtime>(_: &AppHandle<R>, _: bool) -> Result<()> {
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+fn get_launch_agent_path<R: Runtime>(app: &AppHandle<R>) -> Result<PathBuf> {
+    let mut path = app.path().home_dir()?;
+    path.push("Library");
+    path.push("LaunchAgents");
+    path.push(format!("{APP_IDENTIFIER}.plist"));
+    Ok(path)
+}
+
+#[cfg(target_os = "macos")]
+fn build_launch_agent_plist() -> Result<String> {
+    let executable_path = std::env::current_exe()?;
+    let executable = executable_path.to_string_lossy();
+
+    Ok(format!(
+        r#"<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>{APP_IDENTIFIER}</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>{executable}</string>
+    <string>{AUTO_START_ARG}</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <false/>
+</dict>
+</plist>
+"#
+    ))
 }
 
 #[derive(Debug, FromRow)]
@@ -248,6 +323,7 @@ struct UserTodoRow {
     body: Option<String>,
     done: i64,
     remind_at: Option<i64>,
+    is_remind: i64,
     is_deleted: i64,
 }
 
@@ -259,6 +335,7 @@ pub struct UserTodo {
     body: Option<String>,
     done: bool,
     remind_at: Option<i64>,
+    is_remind: bool,
     is_deleted: bool,
 }
 
@@ -270,6 +347,7 @@ impl From<UserTodoRow> for UserTodo {
             body: row.body,
             done: row.done != 0,
             remind_at: row.remind_at,
+            is_remind: row.is_remind != 0,
             is_deleted: row.is_deleted != 0,
         }
     }
@@ -340,12 +418,18 @@ pub async fn update_user_todo<R: Runtime>(
     let title = todo.title.unwrap_or(old.title);
     let body = todo.body.or(old.body);
     let remind_at = todo.remind_at.or(old.remind_at);
+    let is_remind = if todo.remind_at != old.remind_at {
+        0
+    } else {
+        old.is_remind
+    };
 
     // 3. 执行更新
     sqlx::query(user_todo::UPDATE)
         .bind(title)
         .bind(body)
         .bind(remind_at)
+        .bind(is_remind)
         .bind(todo.id)
         .execute(&state.pool)
         .await?;

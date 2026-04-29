@@ -6,7 +6,7 @@ import type { Tab } from "../store";
 export const TAB_KEYS: Record<Tab, Tab> = {
   movement: "movement",
   todo: "todo",
-  reminders: "reminders",
+  settings: "settings",
 } as const;
 
 /**

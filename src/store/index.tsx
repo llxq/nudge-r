@@ -10,13 +10,14 @@ import { doneUserTodo, updateMovementConfig, updateUserSettings } from '../core/
 
 // ─── Types ────────────────────────────────────────────────
 export type ThemeMode = 'light' | 'dark';
-export type Tab = 'movement' | 'todo' | 'reminders';
+export type Tab = 'movement' | 'todo' | 'settings';
 
 export interface Todo {
   id: number;
   title: string;
   body?: string;
   done: boolean;
+  isRemind: boolean;
   createdAt: number;
   remindAt?: number;
 }
@@ -33,6 +34,7 @@ export interface MovementState {
 export interface AppState {
   theme: ThemeMode;
   tab: Tab;
+  autoStart: boolean;
   movement: MovementState;
   todos: Todo[];
 }
@@ -41,6 +43,7 @@ export interface AppState {
 export type Action =
   | { type: EActionType.SET_THEME; payload: ThemeMode }
   | { type: EActionType.SET_TAB; payload: Tab }
+  | { type: EActionType.SET_AUTO_START; payload: boolean }
   | { type: EActionType.MOVEMENT_SET_INTERVAL; payload: number }
   | { type: EActionType.MOVEMENT_SET_WORKING; payload: boolean }
   | { type: EActionType.MOVEMENT_TOGGLE_ACTIVE }
@@ -56,6 +59,7 @@ export type Action =
   remindAt?: number;
 }
   | { type: EActionType.TODO_TOGGLE; payload: number }
+  | { type: EActionType.TODO_MARK_REMINDED; payload: number }
   | {
   type: EActionType.TODO_EDIT;
   payload: {
@@ -72,6 +76,7 @@ export type Action =
 const initialState: AppState = {
   theme: 'light',
   tab: 'movement',
+  autoStart: false,
   movement: {
     intervalMin: 30,
     isWorking: true,
@@ -96,6 +101,11 @@ function reducer(state: AppState, action: Action): AppState {
      */
     case EActionType.SET_TAB:
       return { ...state, tab: action.payload };
+    /**
+     * 设置是否开机自启
+     */
+    case EActionType.SET_AUTO_START:
+      return { ...state, autoStart: action.payload };
     /**
      * 设置活动提醒间隔时长（分钟）
      */
@@ -214,6 +224,7 @@ function reducer(state: AppState, action: Action): AppState {
             title: action.payload,
             body: action.body,
             remindAt: action.remindAt,
+            isRemind: false,
             done: false,
             createdAt: Date.now(),
           },
@@ -239,6 +250,16 @@ function reducer(state: AppState, action: Action): AppState {
       };
     }
     /**
+     * 标记待办已提醒
+     */
+    case EActionType.TODO_MARK_REMINDED:
+      return {
+        ...state,
+        todos: state.todos.map((t) =>
+          t.id === action.payload ? { ...t, isRemind: true } : t
+        ),
+      };
+    /**
      * 编辑待办内容
      */
     case EActionType.TODO_EDIT:
@@ -251,6 +272,8 @@ function reducer(state: AppState, action: Action): AppState {
               title: action.payload.title,
               body: action.payload.body,
               remindAt: action.payload.remindAt,
+              isRemind:
+                action.payload.remindAt !== t.remindAt ? false : t.isRemind,
             }
             : t
         ),
@@ -288,7 +311,11 @@ export function initializeStore(
   dispatch({ type: EActionType.INITIALIZE_STORE, payload: defaults });
 }
 
-const updateUserSettingsActions = [EActionType.SET_THEME, EActionType.SET_TAB];
+const updateUserSettingsActions = [
+  EActionType.SET_THEME,
+  EActionType.SET_TAB,
+  EActionType.SET_AUTO_START,
+];
 const updateMovementSettingsActions = [
   EActionType.MOVEMENT_SET_INTERVAL,
   EActionType.MOVEMENT_SET_WORKING,
@@ -307,6 +334,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       void updateUserSettings({
         theme: data.theme,
         tab: data.tab,
+        autoStart: data.autoStart,
       });
     }
     if (updateMovementSettingsActions.includes(action.type as EActionType)) {
