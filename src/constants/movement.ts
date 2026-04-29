@@ -11,7 +11,7 @@ export const MOVEMENT_INTERVAL_MAX = 180;
 /**
  * 活动提醒模块：间隔时间调节步长（分钟）
  */
-export const MOVEMENT_INTERVAL_STEP = 5;
+export const MOVEMENT_INTERVAL_STEP = 1;
 
 /**
  * 活动提醒模块：间隔时间默认值（分钟）
