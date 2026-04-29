@@ -115,34 +115,16 @@ export default function TrayDetailPage() {
       } as CSSProperties}
     >
       <div className={styles.panel}>
-        <div className={styles.header}>
-          <div
-            className={styles.badge}
-            style={{
-              background: TRAY_DETAIL_THEME.illustrationBg,
-              borderColor: TRAY_DETAIL_THEME.illustrationBorder,
-              boxShadow: TRAY_DETAIL_THEME.illustrationShadow,
-            } as CSSProperties}
-          >
-            ⏱
-          </div>
-          <div className={styles.headerText}>
-            <span className={styles.eyebrow}>托盘详情</span>
-            <h1 className={styles.title}>当前提醒状态</h1>
-          </div>
-        </div>
-
-        <section className={styles.section}>
-          <div className={styles.sectionLabel}>活动提醒</div>
-          <div className={styles.countdown}>{countdownText}</div>
-          <div className={styles.status} style={{ color: TRAY_DETAIL_THEME.subColor }}>
-            {snapshot?.movement.statusText ?? '正在读取最新状态'}
+        <section className={`${styles.section} ${styles.summarySection}`}>
+          <div className={styles.summaryContent}>
+            <div className={styles.sectionTitle}>下次提醒</div>
+            <div className={styles.countdown}>{countdownText}</div>
           </div>
         </section>
 
         <section className={`${styles.section} ${styles.todoSection}`}>
           <div className={styles.sectionRow}>
-            <span className={styles.sectionLabel}>未完成待办</span>
+            <span className={styles.sectionTitle}>待办</span>
             <div className={styles.todoMeta}>
               {remindedCount > 0 && <span className={styles.remindedCount}>已提醒 {remindedCount}</span>}
               <span className={styles.meta}>{todoCount} 条</span>

@@ -31,51 +31,24 @@
   background: rgba(255, 255, 255, 0.92);
 }
 
-.header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.badge {
-  width: 44px;
-  height: 44px;
-  flex-shrink: 0;
-  border-radius: 14px;
-  border: 1px solid rgba(125, 170, 240, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 20px;
-  backdrop-filter: blur(16px);
-}
-
-.headerText {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.eyebrow {
-  font-size: 11px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: rgba(99, 130, 176, 0.72);
-}
-
-.title {
-  margin: 0;
-  font-size: 18px;
-  line-height: 1.2;
-  letter-spacing: -0.04em;
-}
-
 .section {
   background: rgba(246, 250, 255, 0.92);
   border: 1px solid rgba(136, 176, 239, 0.16);
   border-radius: 18px;
   padding: 12px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+}
+
+.summarySection {
+  display: flex;
+  align-items: flex-start;
+  padding: 14px 16px;
+}
+
+.summaryContent {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .todoSection {
@@ -92,26 +65,18 @@
   gap: 12px;
 }
 
-.sectionLabel {
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(97, 126, 168, 0.78);
-}
-
 .countdown {
-  margin-top: 8px;
-  font-size: 34px;
+  font-size: 32px;
   line-height: 1;
   font-weight: 700;
   letter-spacing: 0.06em;
   font-variant-numeric: tabular-nums;
 }
 
-.status {
-  margin-top: 8px;
-  font-size: 12px;
-  line-height: 1.5;
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: #173056;
 }
 
 .meta {

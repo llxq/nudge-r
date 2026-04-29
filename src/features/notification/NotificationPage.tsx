@@ -44,6 +44,14 @@ export default function NotificationPage() {
     return () => clearInterval(timer);
   }, [config, remaining]);
 
+  useEffect(() => {
+    if (!config || remaining !== 0) {
+      return;
+    }
+
+    void closeNoticeWindows();
+  }, [config, remaining]);
+
   const mm = String(Math.floor(remaining / 60)).padStart(2, '0');
   const ss = String(remaining % 60).padStart(2, '0');
 
