@@ -24,6 +24,7 @@ export interface Todo {
 
 export interface MovementState {
   intervalMin: number;
+  idlePauseMin: number;
   isWorking: boolean;
   active: boolean;
   breakEndAt: number | null;
@@ -52,6 +53,7 @@ export type Action =
   | { type: EActionType.MOVEMENT_START_BREAK; payload: number }
   | { type: EActionType.MOVEMENT_END_BREAK }
   | { type: EActionType.MOVEMENT_SET_ACTIVITY_MIN; payload: number }
+  | { type: EActionType.MOVEMENT_SET_IDLE_PAUSE_MIN; payload: number }
   | {
   type: EActionType.TODO_ADD;
   payload: string;
@@ -79,6 +81,7 @@ const initialState: AppState = {
   autoStart: false,
   movement: {
     intervalMin: 30,
+    idlePauseMin: 5,
     isWorking: true,
     active: false,
     breakEndAt: null,
@@ -212,6 +215,14 @@ function reducer(state: AppState, action: Action): AppState {
         movement: { ...state.movement, activityMin: action.payload },
       };
     /**
+     * 设置空闲暂停阈值（分钟）
+     */
+    case EActionType.MOVEMENT_SET_IDLE_PAUSE_MIN:
+      return {
+        ...state,
+        movement: { ...state.movement, idlePauseMin: action.payload },
+      };
+    /**
      * 新增一条待办
      */
     case EActionType.TODO_ADD:
@@ -324,6 +335,7 @@ const updateMovementSettingsActions = [
   EActionType.MOVEMENT_START_BREAK,
   EActionType.MOVEMENT_END_BREAK,
   EActionType.MOVEMENT_SET_ACTIVITY_MIN,
+  EActionType.MOVEMENT_SET_IDLE_PAUSE_MIN,
 ];
 
 export function StoreProvider({ children }: { children: ReactNode }) {

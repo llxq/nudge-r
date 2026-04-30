@@ -9,6 +9,7 @@ export interface ISysUserSetting {
 export interface ISysMovementConfig {
   id: 1;
   interval_min: number;
+  idle_pause_min: number;
   activity_min: number;
   is_working: 0 | 1;
   active: 0 | 1;

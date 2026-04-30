@@ -548,7 +548,7 @@ fn format_movement_status_label(movement: &TrayMovementSnapshotRow, now: i64) ->
   }
 
   let Some(start_time) = movement.start_time else {
-    return String::from("活动提醒等待开始");
+    return String::from("等待恢复操作后重新开始计时");
   };
 
   let total_seconds = movement.interval_min.max(0) * 60;
@@ -647,8 +647,10 @@ mod tests {
     let snapshot = build_tray_detail_snapshot(&movement, &todos, 0);
 
     assert_eq!(snapshot.todos.len(), TRAY_TODO_PREVIEW_LIMIT);
-    assert_eq!(snapshot.todos[0], "待办 1");
-    assert_eq!(snapshot.todos[4], "待办 5");
+    assert_eq!(snapshot.todos[0].title, "待办 1");
+    assert!(!snapshot.todos[0].is_remind);
+    assert_eq!(snapshot.todos[4].title, "待办 5");
+    assert!(!snapshot.todos[4].is_remind);
     assert_eq!(snapshot.reminded_count, 3);
     assert_eq!(snapshot.overflow_count, 2);
   }

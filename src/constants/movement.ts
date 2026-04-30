@@ -47,3 +47,18 @@ export const MOVEMENT_ACTIVITY_MAX = 30;
  * 活动提醒模块：每次提醒后活动时长默认值（分钟），暂时写死，后期从数据库读取
  */
 export const MOVEMENT_ACTIVITY_DEFAULT = 5;
+
+/**
+ * 活动提醒模块：空闲暂停阈值最小值（分钟）
+ */
+export const MOVEMENT_IDLE_PAUSE_MIN = 1;
+
+/**
+ * 活动提醒模块：空闲暂停阈值最大值（分钟）
+ */
+export const MOVEMENT_IDLE_PAUSE_MAX = 60;
+
+/**
+ * 活动提醒模块：空闲暂停阈值默认值（分钟）
+ */
+export const MOVEMENT_IDLE_PAUSE_DEFAULT = 5;

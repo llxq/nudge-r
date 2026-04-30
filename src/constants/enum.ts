@@ -44,6 +44,10 @@ export enum EActionType {
    */
   MOVEMENT_SET_ACTIVITY_MIN = 'MOVEMENT_SET_ACTIVITY_MIN',
   /**
+   * 设置空闲暂停阈值（分钟）
+   */
+  MOVEMENT_SET_IDLE_PAUSE_MIN = 'MOVEMENT_SET_IDLE_PAUSE_MIN',
+  /**
    * 新增一条待办
    */
   TODO_ADD = 'TODO_ADD',

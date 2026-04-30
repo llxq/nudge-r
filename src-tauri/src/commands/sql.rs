@@ -134,6 +134,7 @@ fn build_launch_agent_plist() -> Result<String> {
 pub struct MovementConfigRow {
     // sqlLite 中只有 64 位整数
     interval_min: i64,
+    idle_pause_min: i64,
     activity_min: i64,
     is_working: i64,
     active: i64,
@@ -146,6 +147,7 @@ pub struct MovementConfigRow {
 #[serde(rename_all = "camelCase")]
 pub struct MovementConfig {
     pub interval_min: i64,
+    pub idle_pause_min: i64,
     pub activity_min: i64,
     pub is_working: bool,
     pub active: bool,
@@ -196,6 +198,7 @@ impl From<MovementConfigRow> for MovementConfig {
     fn from(row: MovementConfigRow) -> Self {
         Self {
             interval_min: row.interval_min,
+            idle_pause_min: row.idle_pause_min,
             activity_min: row.activity_min,
             is_working: row.is_working != 0,
             active: row.active != 0,
@@ -210,6 +213,7 @@ impl From<MovementConfigRow> for MovementConfig {
 #[serde(rename_all = "camelCase")]
 pub struct MovementConfigPatch {
     pub interval_min: Option<i64>,
+    pub idle_pause_min: Option<i64>,
     pub activity_min: Option<i64>,
     pub is_working: Option<bool>,
     pub active: Option<bool>,
@@ -280,6 +284,10 @@ pub async fn update_movement_config<R: Runtime>(
     if let Some(v) = config.interval_min {
         push_set(&mut query_builder);
         query_builder.push("interval_min = ").push_bind(v);
+    }
+    if let Some(v) = config.idle_pause_min {
+        push_set(&mut query_builder);
+        query_builder.push("idle_pause_min = ").push_bind(v);
     }
     if let Some(v) = config.activity_min {
         push_set(&mut query_builder);
@@ -488,6 +496,7 @@ mod tests {
                 CREATE TABLE sys_movement_config (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
                     interval_min INTEGER NOT NULL,
+                    idle_pause_min INTEGER NOT NULL,
                     activity_min INTEGER NOT NULL,
                     is_working INTEGER NOT NULL,
                     active INTEGER NOT NULL,
@@ -510,12 +519,12 @@ mod tests {
             sqlx::query(
                 r#"
                 INSERT INTO sys_movement_config (
-                    id, interval_min, activity_min, is_working, active, default_todo_remind_at,
+                    id, interval_min, idle_pause_min, activity_min, is_working, active, default_todo_remind_at,
                     break_end_at, start_time, notification_title, notification_sub,
                     notification_tips_json, notification_button_text, notification_emoji,
                     notification_countdown_label
                 ) VALUES (
-                    1, 30, 5, 1, 1, '09:00:00',
+                    1, 30, 5, 5, 1, 1, '09:00:00',
                     NULL, NULL, '起来活动', '先拉伸两分钟',
                     '["拉伸颈肩","起身走动"]', '好的，我现在去', '🏃', '活动时间'
                 )

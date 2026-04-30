@@ -12,6 +12,7 @@ use crate::{
 use serde::Serialize;
 use sqlx::{FromRow, SqlitePool};
 use std::{
+    process::Command,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
 use tauri::{async_runtime, AppHandle, Emitter, Manager, Runtime};
@@ -19,10 +20,12 @@ use tokio::time::interval;
 // 导入 tokio 的时间库
 
 const POLL_INTERVAL: Duration = Duration::from_secs(1);
+const SLEEP_GAP_THRESHOLD_MS: i64 = 15_000;
 
 #[derive(Debug, FromRow)]
 struct MovementConfigSnapshot {
     interval_min: i64,
+    idle_pause_min: i64,
     is_working: i64,
     active: i64,
     start_time: Option<i64>,
@@ -52,11 +55,17 @@ pub fn start_background<R: Runtime>(app: AppHandle<R>) {
 }
 
 async fn run_movement_loop<R: Runtime>(app: AppHandle<R>) {
+    let mut waiting_for_resume = false;
     let mut interval = interval(POLL_INTERVAL);
+    let mut last_tick_at = current_timestamp_millis();
 
     info_log("活动提醒后台循环已启动");
 
     loop {
+        let now = current_timestamp_millis();
+        let tick_gap_ms = now.saturating_sub(last_tick_at);
+        last_tick_at = now;
+
         let config = match fetch_movement_config(&app).await {
             Ok(config) => config,
             Err(err) => {
@@ -67,27 +76,66 @@ async fn run_movement_loop<R: Runtime>(app: AppHandle<R>) {
         };
 
         if config.active == 0 {
+            waiting_for_resume = false;
             interval.tick().await;
             continue;
         }
 
         if config.is_working == 0 {
+            waiting_for_resume = false;
             interval.tick().await;
             continue;
         }
 
+        let idle_limit_ms = config.idle_pause_min.max(1) * 60 * 1000;
         let interval_ms = config.interval_min * 60 * 1000;
-        let now = current_timestamp_millis();
+        let idle_ms = current_idle_millis();
+
+        if tick_gap_ms >= SLEEP_GAP_THRESHOLD_MS
+            && config.start_time.is_some()
+            && !waiting_for_resume
+        {
+            if let Err(err) =
+                reset_movement_timer(&app, &mut waiting_for_resume, "系统休眠后已暂停活动提醒").await
+            {
+                info_log(&format!("休眠后重置活动提醒失败: {}", err));
+            }
+            interval.tick().await;
+            continue;
+        }
+
+        if matches!(idle_ms, Some(value) if value >= idle_limit_ms)
+            && config.start_time.is_some()
+            && !waiting_for_resume
+        {
+            if let Err(err) = reset_movement_timer(&app, &mut waiting_for_resume, "用户长时间未操作，暂停活动提醒倒计时").await {
+                info_log(&format!("空闲后重置活动提醒失败: {}", err));
+            }
+            interval.tick().await;
+            continue;
+        }
+
+        if waiting_for_resume && matches!(idle_ms, Some(value) if value >= idle_limit_ms) {
+            interval.tick().await;
+            continue;
+        }
+
         let start_time = match config.start_time {
             Some(start_time) => {
+                waiting_for_resume = false;
                 start_time
             }
             None => {
                 if let Err(err) = persist_start_time(&app, Some(now)).await {
                     info_log(&format!("初始化 start_time 失败: {}", err));
                 } else {
-                    if let Err(err) = emit_timer_event(&app, "start", Some(now)) {
+                    let reason = if waiting_for_resume { "resume" } else { "start" };
+                    waiting_for_resume = false;
+                    if let Err(err) = emit_timer_event(&app, reason, Some(now)) {
                         info_log(&format!("发送倒计时启动事件失败: {}", err));
+                    }
+                    if reason == "resume" {
+                        info_log("检测到用户恢复操作，重新开始活动提醒倒计时");
                     }
                 }
                 interval.tick().await;
@@ -135,6 +183,18 @@ async fn persist_start_time<R: Runtime>(
     update_start_time(&pool, start_time).await
 }
 
+async fn reset_movement_timer<R: Runtime>(
+    app: &AppHandle<R>,
+    waiting_for_resume: &mut bool,
+    message: &str,
+) -> Result<()> {
+    persist_start_time(app, None).await?;
+    *waiting_for_resume = true;
+    emit_timer_event(app, "idle-reset", None)?;
+    info_log(message);
+    Ok(())
+}
+
 async fn update_start_time(pool: &SqlitePool, start_time: Option<i64>) -> Result<()> {
     sqlx::query(sys_movement_config::UPDATE_START_TIME)
         .bind(start_time)
@@ -162,6 +222,28 @@ fn current_timestamp_millis() -> i64 {
         .as_millis() as i64
 }
 
+#[cfg(target_os = "macos")]
+fn current_idle_millis() -> Option<i64> {
+    let output = Command::new("ioreg")
+        .args(["-c", "IOHIDSystem"])
+        .output()
+        .ok()?;
+    let stdout = String::from_utf8(output.stdout).ok()?;
+    let idle_line = stdout.lines().find(|line| line.contains("HIDIdleTime"))?;
+    let nanos = idle_line
+        .chars()
+        .filter(|ch| ch.is_ascii_digit())
+        .collect::<String>()
+        .parse::<u128>()
+        .ok()?;
+    Some((nanos / 1_000_000) as i64)
+}
+
+#[cfg(not(target_os = "macos"))]
+fn current_idle_millis() -> Option<i64> {
+    None
+}
+
 #[cfg(test)]
 mod tests {
     use super::{fetch_movement_config_from_pool, update_start_time, MovementConfigSnapshot};
@@ -184,6 +266,7 @@ mod tests {
                 CREATE TABLE sys_movement_config (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
                     interval_min INTEGER NOT NULL,
+                    idle_pause_min INTEGER NOT NULL,
                     activity_min INTEGER NOT NULL,
                     is_working INTEGER NOT NULL,
                     active INTEGER NOT NULL,
@@ -197,8 +280,8 @@ mod tests {
 
             sqlx::query(
                 r#"
-                INSERT INTO sys_movement_config (id, interval_min, activity_min, is_working, active, start_time)
-                VALUES (1, 30, 5, 1, 1, NULL)
+                INSERT INTO sys_movement_config (id, interval_min, idle_pause_min, activity_min, is_working, active, start_time)
+                VALUES (1, 30, 5, 5, 1, 1, NULL)
                 "#,
             )
             .execute(&pool)

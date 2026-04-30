@@ -4,14 +4,24 @@ import { PlayCircleOutlined, PauseCircleOutlined, ReloadOutlined } from "@ant-de
 import dayjs from "dayjs";
 import { useStore } from "../../store";
 import { EActionType } from "../../constants/enum";
-import { MOVEMENT_INTERVAL_MIN, MOVEMENT_INTERVAL_MAX, MOVEMENT_INTERVAL_STEP, MOVEMENT_INTERVAL_DEFAULT, MOVEMENT_ACTIVITY_MIN, MOVEMENT_ACTIVITY_MAX } from "../../constants/movement";
+import {
+  MOVEMENT_INTERVAL_MIN,
+  MOVEMENT_INTERVAL_MAX,
+  MOVEMENT_INTERVAL_STEP,
+  MOVEMENT_INTERVAL_DEFAULT,
+  MOVEMENT_ACTIVITY_MIN,
+  MOVEMENT_ACTIVITY_MAX,
+  MOVEMENT_IDLE_PAUSE_MIN,
+  MOVEMENT_IDLE_PAUSE_MAX,
+  MOVEMENT_IDLE_PAUSE_DEFAULT,
+} from "../../constants/movement";
 import { formatRemainingTime, getMovementRemainingMs } from "../../utils/timer";
 import styles from "./MovementPanel.module.scss";
 
 export default function MovementPanel() {
   const { state, dispatch } = useStore();
   const [now, setNow] = useState(Date.now());
-  const { intervalMin, isWorking, active, breakEndAt, startTime, activityMin } = state.movement;
+  const { intervalMin, idlePauseMin, isWorking, active, breakEndAt, startTime, activityMin } = state.movement;
 
   // 休息倒计时结束后自动恢复工作状态
   useEffect(() => {
@@ -113,6 +123,29 @@ export default function MovementPanel() {
               value={activityMin}
               onChange={(v) =>
                 dispatch({ type: EActionType.MOVEMENT_SET_ACTIVITY_MIN, payload: v ?? 5 })
+              }
+              addonAfter="分钟"
+              size="small"
+              style={{ width: 100 }}
+            />
+          </div>
+        </div>
+      </section>
+
+      <section className={styles.section}>
+        <label className={styles.sectionLabel}>空闲暂停</label>
+        <div className={styles.card}>
+          <div className={`${styles.row} ${styles.rowNoBorder}`}>
+            <span className={styles.rowLabel}>空闲阈值</span>
+            <InputNumber
+              min={MOVEMENT_IDLE_PAUSE_MIN}
+              max={MOVEMENT_IDLE_PAUSE_MAX}
+              value={idlePauseMin}
+              onChange={(v) =>
+                dispatch({
+                  type: EActionType.MOVEMENT_SET_IDLE_PAUSE_MIN,
+                  payload: v ?? MOVEMENT_IDLE_PAUSE_DEFAULT,
+                })
               }
               addonAfter="分钟"
               size="small"

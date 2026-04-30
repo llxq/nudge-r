@@ -16,6 +16,7 @@ INSERT OR IGNORE INTO sys_user_setting (key, value) VALUES
 CREATE TABLE sys_movement_config (
     id INTEGER PRIMARY KEY CHECK (id = 1), -- 活动提醒配置的 id，约束必须等于1，防止插入多条
     interval_min INTEGER NOT NULL DEFAULT 30,   -- 提醒间隔（分钟）
+    idle_pause_min INTEGER NOT NULL DEFAULT 5,  -- 空闲多久后暂停并重置提醒（分钟）
     activity_min INTEGER NOT NULL DEFAULT 5,    -- 每次活动时长（分钟）
     is_working   INTEGER NOT NULL DEFAULT 1,    -- 1=工作中, 0=休息中
     active       INTEGER NOT NULL DEFAULT 0,    -- 1=提醒已开启
@@ -31,8 +32,8 @@ CREATE TABLE sys_movement_config (
 );
 
 -- 默认配置
-INSERT OR IGNORE INTO sys_movement_config (id, interval_min, activity_min, is_working, active) VALUES
-(1, 30, 5, 1, 0);
+INSERT OR IGNORE INTO sys_movement_config (id, interval_min, idle_pause_min, activity_min, is_working, active) VALUES
+(1, 30, 5, 5, 1, 0);
 
 
 -- 待办事项表
