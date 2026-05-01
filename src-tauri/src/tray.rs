@@ -214,7 +214,7 @@ pub async fn get_tray_detail_snapshot<R: Runtime>(
  */
 #[tauri::command]
 pub fn show_main_window_from_tray<R: Runtime>(app: AppHandle<R>) -> Result<()> {
-  show_main_window(&app)?;
+  show_main_window(&app, true)?;
   if let Some(window) = app.get_webview_window(TRAY_DETAIL_WINDOW_LABEL) {
     window.close()?;
   }
@@ -245,9 +245,12 @@ pub async fn refresh_tray_menu<R: Runtime>(app: &AppHandle<R>) -> Result<()> {
 /**
  * 显示并聚焦主窗口
  */
-fn show_main_window<R: Runtime>(app: &AppHandle<R>) -> tauri::Result<()> {
+fn show_main_window<R: Runtime>(app: &AppHandle<R>, reload: bool) -> tauri::Result<()> {
   if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
     set_dock_visibility(app, true);
+    if reload {
+      window.reload()?;
+    }
     window.show()?;
     window.unminimize()?;
     window.set_focus()?;
@@ -318,7 +321,7 @@ fn handle_tray_click(app: &AppHandle, tray_rect: Rect) -> tauri::Result<()> {
       if let Some(window) = app.get_webview_window(TRAY_DETAIL_WINDOW_LABEL) {
         let _ = window.close();
       }
-      show_main_window(app)
+      show_main_window(app, false)
     }
     TrayClickAction::ShowTrayDetail => toggle_tray_detail_window(app, tray_rect),
   }
@@ -540,15 +543,15 @@ fn build_tray_detail_snapshot(
  */
 fn format_movement_status_label(movement: &TrayMovementSnapshotRow, now: i64) -> String {
   if movement.active == 0 {
-    return String::from("活动提醒未开启");
+    return String::from("--:--");
   }
 
   if movement.is_working == 0 {
-    return String::from("当前处于休息中");
+    return String::from("--:--");
   }
 
   let Some(start_time) = movement.start_time else {
-    return String::from("等待恢复操作后重新开始计时");
+    return String::from("--:--");
   };
 
   let total_seconds = movement.interval_min.max(0) * 60;

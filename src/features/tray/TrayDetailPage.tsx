@@ -1,35 +1,34 @@
-import { emit, listen } from '@tauri-apps/api/event';
-import { useEffect, useState, type CSSProperties } from 'react';
+import { invoke } from "@tauri-apps/api/core";
+import { emit, listen } from "@tauri-apps/api/event";
+import { useEffect, useState, type CSSProperties } from "react";
 import {
   getTrayDetailSnapshot,
   quitApp,
   showMainWindowFromTray,
   type ITrayDetailMovementState,
   type ITrayDetailSnapshot,
-} from '../../core/invoke';
-import styles from './TrayDetailPage.module.scss';
+} from "../../core/invoke";
+import styles from "./TrayDetailPage.module.scss";
+import { Button } from "antd";
 
 type TrayDetailUpdatedPayload = ITrayDetailSnapshot;
-const TRAY_DETAIL_READY_EVENT = 'tray-detail-ready';
+const TRAY_DETAIL_READY_EVENT = "tray-detail-ready";
 const TRAY_DETAIL_THEME = {
-  bg: 'linear-gradient(180deg, #f8fbff 0%, #f2f7ff 100%)',
-  glow1: 'rgba(85, 150, 255, 0.14)',
-  glow2: 'rgba(154, 210, 255, 0.18)',
-  illustrationBg: 'linear-gradient(135deg, rgba(72, 130, 255, 0.14), rgba(112, 195, 255, 0.12))',
-  illustrationBorder: 'rgba(116, 166, 245, 0.24)',
-  illustrationShadow: '0 10px 26px rgba(85, 145, 255, 0.16)',
-  tipBg: 'rgba(91, 145, 255, 0.08)',
-  tipBorder: 'rgba(121, 167, 246, 0.18)',
-  tipColor: 'rgba(37, 77, 144, 0.92)',
-  btnBg: 'linear-gradient(135deg, #2f74ff 0%, #4aa3ff 100%)',
-  btnShadow: 'rgba(64, 132, 255, 0.22)',
-  subColor: 'rgba(86, 114, 160, 0.78)',
+  bg: "linear-gradient(180deg, #f8fbff 0%, #f2f7ff 100%)",
+  glow1: "rgba(85, 150, 255, 0.14)",
+  glow2: "rgba(154, 210, 255, 0.18)",
+  illustrationBg: "linear-gradient(135deg, rgba(72, 130, 255, 0.14), rgba(112, 195, 255, 0.12))",
+  illustrationBorder: "rgba(116, 166, 245, 0.24)",
+  illustrationShadow: "0 10px 26px rgba(85, 145, 255, 0.16)",
+  tipBg: "rgba(91, 145, 255, 0.08)",
+  tipBorder: "rgba(121, 167, 246, 0.18)",
+  tipColor: "rgba(37, 77, 144, 0.92)",
+  btnBg: "linear-gradient(135deg, #2f74ff 0%, #4aa3ff 100%)",
+  btnShadow: "rgba(64, 132, 255, 0.22)",
+  subColor: "rgba(86, 114, 160, 0.78)",
 };
 
-const countRemainingSeconds = (
-  movement: ITrayDetailMovementState,
-  now: number,
-): number | null => {
+const countRemainingSeconds = (movement: ITrayDetailMovementState, now: number): number | null => {
   if (!movement.active || !movement.isWorking || movement.startTime == null) {
     return null;
   }
@@ -42,7 +41,7 @@ const countRemainingSeconds = (
 const formatSecondsAsClock = (totalSeconds: number): string => {
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 };
 
 export default function TrayDetailPage() {
@@ -61,7 +60,7 @@ export default function TrayDetailPage() {
       setNow(Date.now());
     });
 
-    listen<TrayDetailUpdatedPayload>('tray-detail-updated', (event) => {
+    listen<TrayDetailUpdatedPayload>("tray-detail-updated", (event) => {
       if (!mounted) {
         return;
       }
@@ -93,7 +92,7 @@ export default function TrayDetailPage() {
 
   const remainingSeconds = snapshot ? countRemainingSeconds(snapshot.movement, now) : null;
   const countdownText =
-    remainingSeconds == null ? snapshot?.movement.statusText ?? '--:--' : formatSecondsAsClock(remainingSeconds);
+    remainingSeconds == null ? (snapshot?.movement.statusText ?? "--:--") : formatSecondsAsClock(remainingSeconds);
   const todoCount = snapshot ? snapshot.todos.length + snapshot.overflowCount : 0;
   const remindedCount = snapshot?.remindedCount ?? 0;
 
@@ -105,20 +104,52 @@ export default function TrayDetailPage() {
     await quitApp();
   };
 
+  const reset = async (): Promise<void> => {
+    await invoke("update_movement_config", {
+      config: {
+        active: true,
+        startTime: Date.now(),
+      },
+    });
+  };
+
+  const toggleStatus = async (): Promise<void> => {
+    await invoke("update_movement_config", {
+      config: {
+        active: !snapshot?.movement.active,
+      },
+    });
+  };
+
   return (
     <div
       className={styles.shell}
-      style={{
-        background: TRAY_DETAIL_THEME.bg,
-        '--glow1': TRAY_DETAIL_THEME.glow1,
-        '--glow2': TRAY_DETAIL_THEME.glow2,
-      } as CSSProperties}
+      style={
+        {
+          background: TRAY_DETAIL_THEME.bg,
+          "--glow1": TRAY_DETAIL_THEME.glow1,
+          "--glow2": TRAY_DETAIL_THEME.glow2,
+        } as CSSProperties
+      }
     >
       <div className={styles.panel}>
         <section className={`${styles.section} ${styles.summarySection}`}>
           <div className={styles.summaryContent}>
-            <div className={styles.sectionTitle}>下次提醒</div>
-            <div className={styles.countdown}>{countdownText}</div>
+            <div className={styles.sectionTitle}>距离提醒还有</div>
+            <div className={styles.countdown}>
+              <div className={styles.countdownText}>{countdownText}</div>
+              <Button
+                onClick={reset}
+                color="primary"
+                variant="outlined"
+                className={`${styles.actionButton} ${styles.resetButton}`}
+              >
+                重置
+              </Button>
+              <Button onClick={toggleStatus} color="pink" variant="outlined" className={styles.actionButton}>
+                {snapshot?.movement.active ? "停止" : "开始"}
+              </Button>
+            </div>
           </div>
         </section>
 
@@ -152,7 +183,7 @@ export default function TrayDetailPage() {
                   }}
                 >
                   <span className={styles.todoDot} />
-                  <span className={`${styles.todoText} ${todo.isRemind ? styles.todoTextReminded : ''}`}>
+                  <span className={`${styles.todoText} ${todo.isRemind ? styles.todoTextReminded : ""}`}>
                     {todo.title}
                   </span>
                 </div>
