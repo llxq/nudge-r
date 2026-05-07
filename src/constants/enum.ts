@@ -48,26 +48,6 @@ export enum EActionType {
    */
   MOVEMENT_SET_IDLE_PAUSE_MIN = 'MOVEMENT_SET_IDLE_PAUSE_MIN',
   /**
-   * 新增一条待办
-   */
-  TODO_ADD = 'TODO_ADD',
-  /**
-   * 切换待办完成状态
-   */
-  TODO_TOGGLE = 'TODO_TOGGLE',
-  /**
-   * 标记待办已提醒
-   */
-  TODO_MARK_REMINDED = 'TODO_MARK_REMINDED',
-  /**
-   * 编辑待办内容
-   */
-  TODO_EDIT = 'TODO_EDIT',
-  /**
-   * 删除指定待办
-   */
-  TODO_DELETE = 'TODO_DELETE',
-  /**
    * 初始化 store 默认值
    */
   INITIALIZE_STORE = 'INITIALIZE_STORE',

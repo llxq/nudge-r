@@ -23,7 +23,13 @@ import type { Dayjs } from 'dayjs';
 import dayjs from 'dayjs';
 import { useState } from 'react';
 import { EActionType } from '../../constants/enum';
-import { createUserTodo, deleteUserTodo, updateUserTodo } from '../../core/invoke.ts';
+import {
+  createUserTodo,
+  deleteUserTodo,
+  doneUserTodo,
+  getUserTodos,
+  updateUserTodo,
+} from '../../core/invoke.ts';
 import { useStore } from '../../store';
 import { $success } from '../../utils/message.ts';
 import RichEditor from './RichEditor';
@@ -64,7 +70,7 @@ export default function TodoPanel() {
     setModalOpen(true);
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const title = draftTitle.trim();
     if (!title) {
       setTitleError(true);
@@ -72,29 +78,26 @@ export default function TodoPanel() {
     }
     const remindAt = draftRemindAt ? draftRemindAt.valueOf() : undefined;
     if (editId === null) {
-      void createUserTodo({
+      await createUserTodo({
         title,
         body: draftBody,
         remindAt,
       });
-      dispatch({
-        type: EActionType.TODO_ADD,
-        payload: title,
-        body: draftBody,
-        remindAt,
-      });
     } else {
-      void updateUserTodo({
+      await updateUserTodo({
         id: editId,
         title,
         body: draftBody,
         remindAt,
       });
-      dispatch({
-        type: EActionType.TODO_EDIT,
-        payload: { id: editId, title, body: draftBody, remindAt },
-      });
     }
+
+    const todos = await getUserTodos();
+    dispatch({
+      type: EActionType.INITIALIZE_STORE,
+      payload: { todos },
+    });
+
     void $success('操作成功');
     setModalOpen(false);
   };
@@ -114,14 +117,26 @@ export default function TodoPanel() {
   const doneCount = doneList.length;
   const totalCount = todos.length;
 
+  const refreshTodos = async (): Promise<void> => {
+    const nextTodos = await getUserTodos();
+    dispatch({
+      type: EActionType.INITIALIZE_STORE,
+      payload: { todos: nextTodos },
+    });
+  };
+
   // ─── Render helpers ───────────────────────────────────────
   const renderItem = (t: (typeof todos)[0]) => (
     <li key={t.id} className={styles.item}>
       <Checkbox
         checked={t.done}
-        onChange={() =>
-          dispatch({ type: EActionType.TODO_TOGGLE, payload: t.id })
-        }
+        onChange={async () => {
+          await doneUserTodo({
+            id: t.id,
+            done: !t.done,
+          });
+          await refreshTodos();
+        }}
       />
       <div className={styles.itemBody}>
         <span
@@ -169,7 +184,7 @@ export default function TodoPanel() {
           okButtonProps={{ danger: true, size: 'small' }}
           onConfirm={async () => {
             await deleteUserTodo({ id: t.id });
-            dispatch({ type: EActionType.TODO_DELETE, payload: t.id });
+            await refreshTodos();
           }}
         >
           <Tooltip title="删除">

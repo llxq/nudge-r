@@ -2,6 +2,8 @@ import type { CSSProperties } from 'react';
 import { useEffect, useState } from 'react';
 import { ConfigProvider, Spin, theme as antTheme } from 'antd';
 import { listen } from '@tauri-apps/api/event';
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn';
 import zhCN from 'antd/locale/zh_CN';
 import {
   ANT_BASE_TOKEN,
@@ -19,6 +21,8 @@ import {
 } from '../store';
 import styles from './App.module.scss';
 import { getMovementConfig, getUserSettings, getUserTodos } from '../core/invoke';
+
+dayjs.locale('zh-cn');
 
 type MovementTimerResetPayload = {
   reason: 'idle-reset' | 'resume' | 'start' | 'restart';

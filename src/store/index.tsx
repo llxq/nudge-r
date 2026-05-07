@@ -6,7 +6,7 @@ import {
   type Dispatch,
 } from 'react';
 import { EActionType } from '../constants/enum';
-import { doneUserTodo, updateMovementConfig, updateUserSettings } from '../core/invoke';
+import { updateMovementConfig, updateUserSettings } from '../core/invoke';
 
 // ─── Types ────────────────────────────────────────────────
 export type ThemeMode = 'light' | 'dark';
@@ -54,24 +54,6 @@ export type Action =
   | { type: EActionType.MOVEMENT_END_BREAK }
   | { type: EActionType.MOVEMENT_SET_ACTIVITY_MIN; payload: number }
   | { type: EActionType.MOVEMENT_SET_IDLE_PAUSE_MIN; payload: number }
-  | {
-  type: EActionType.TODO_ADD;
-  payload: string;
-  body?: string;
-  remindAt?: number;
-}
-  | { type: EActionType.TODO_TOGGLE; payload: number }
-  | { type: EActionType.TODO_MARK_REMINDED; payload: number }
-  | {
-  type: EActionType.TODO_EDIT;
-  payload: {
-    id: number;
-    title: string;
-    body?: string;
-    remindAt?: number;
-  };
-}
-  | { type: EActionType.TODO_DELETE; payload: number }
   | { type: EActionType.INITIALIZE_STORE; payload: Partial<AppState> };
 
 // ─── Initial State ────────────────────────────────────────
@@ -221,81 +203,6 @@ function reducer(state: AppState, action: Action): AppState {
       return {
         ...state,
         movement: { ...state.movement, idlePauseMin: action.payload },
-      };
-    /**
-     * 新增一条待办
-     */
-    case EActionType.TODO_ADD:
-      return {
-        ...state,
-        todos: [
-          ...state.todos,
-          {
-            id: Date.now(),
-            title: action.payload,
-            body: action.body,
-            remindAt: action.remindAt,
-            isRemind: false,
-            done: false,
-            createdAt: Date.now(),
-          },
-        ],
-      };
-    /**
-     * 切换待办完成状态
-     */
-    case EActionType.TODO_TOGGLE:
-    {
-      const updateId = action.payload;
-      const todo = state.todos.find(it => it.id === updateId)
-      const done =!todo?.done
-      void doneUserTodo({
-        id: updateId,
-        done
-      })
-      return {
-        ...state,
-        todos: state.todos.map((t) =>
-          t.id === action.payload ? { ...t, done } : t
-        ),
-      };
-    }
-    /**
-     * 标记待办已提醒
-     */
-    case EActionType.TODO_MARK_REMINDED:
-      return {
-        ...state,
-        todos: state.todos.map((t) =>
-          t.id === action.payload ? { ...t, isRemind: true } : t
-        ),
-      };
-    /**
-     * 编辑待办内容
-     */
-    case EActionType.TODO_EDIT:
-      return {
-        ...state,
-        todos: state.todos.map((t) =>
-          t.id === action.payload.id
-            ? {
-              ...t,
-              title: action.payload.title,
-              body: action.payload.body,
-              remindAt: action.payload.remindAt,
-              isRemind:
-                action.payload.remindAt !== t.remindAt ? false : t.isRemind,
-            }
-            : t
-        ),
-      };
-    /**
-     * 删除指定待办
-     */
-    case EActionType.TODO_DELETE:
-      return {
-        ...state,
-        todos: state.todos.filter((t) => t.id !== action.payload),
       };
     /**
      * 初始化 store 默认值（仅入口，实际值可在外部获取后 dispatch）
